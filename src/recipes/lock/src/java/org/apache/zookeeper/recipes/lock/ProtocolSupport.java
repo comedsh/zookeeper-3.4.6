@@ -36,14 +36,21 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *  operations if the connection to ZooKeeper closes such as 
  *  {@link #retryOperation(ZooKeeperOperation)}
  *
+ * 我将这个 Base Class 从 protected 改为了 Public
+ *
  */
-class ProtocolSupport {
+public class ProtocolSupport {
+	
     private static final Logger LOG = LoggerFactory.getLogger(ProtocolSupport.class);
 
     protected final ZooKeeper zookeeper;
+    
     private AtomicBoolean closed = new AtomicBoolean(false);
+    
     private long retryDelay = 500L;
+    
     private int retryCount = 10;
+    
     private List<ACL> acl = ZooDefs.Ids.OPEN_ACL_UNSAFE;
 
     public ProtocolSupport(ZooKeeper zookeeper) {
@@ -140,7 +147,8 @@ class ProtocolSupport {
      * @param path
      */
     protected void ensurePathExists(String path) {
-        ensureExists(path, null, acl, CreateMode.PERSISTENT);
+
+    	ensureExists(path, null, acl, CreateMode.PERSISTENT);
     }
 
     /**
@@ -149,18 +157,30 @@ class ProtocolSupport {
      * @param acl
      * @param flags
      */
-    protected void ensureExists(final String path, final byte[] data,
-            final List<ACL> acl, final CreateMode flags) {
+    protected void ensureExists(final String path, final byte[] data, final List<ACL> acl, final CreateMode flags) {
+    	
         try {
+        	
             retryOperation(new ZooKeeperOperation() {
+            	
                 public boolean execute() throws KeeperException, InterruptedException {
+                	
+                	/**
+                	 * 哈哈，又云里雾里了哈，怎么都返回 true？true 表示当前的 execution 成功并终止，不需要 retry了，而 retry 的前提是，有异常发生。
+                	 */
                     Stat stat = zookeeper.exists(path, false);
+                    
                     if (stat != null) {
+                    	
                         return true;
+                        
                     }
+                    
                     zookeeper.create(path, data, acl, flags);
+                    
                     return true;
                 }
+                
             });
         } catch (KeeperException e) {
             LOG.warn("Caught: " + e, e);

@@ -264,8 +264,11 @@ public class WriteLock extends ProtocolSupport {
         if (isClosed()) {
             return false;
         }
+        
+        // 首先保证根目录创建成功，且根目录必须是 PERSISTENT 的，否则不能创建子节点；所以看到，该方法内部的实现是，创建一个 PERSISTENT 的节点。
         ensurePathExists(dir);
-
+        
+        // 创建当前 Client 相对于根目录所对应的子节点，子节点名为 root path + session id + order num
         return (Boolean) retryOperation(zop);
     }
 
